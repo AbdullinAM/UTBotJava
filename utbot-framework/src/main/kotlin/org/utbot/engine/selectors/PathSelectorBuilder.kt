@@ -13,11 +13,7 @@ import org.utbot.engine.selectors.nurs.NeuroSatSelector
 import org.utbot.engine.selectors.nurs.InheritorsSelector
 import org.utbot.engine.selectors.nurs.RPSelector
 import org.utbot.engine.selectors.nurs.VisitCountingSelector
-import org.utbot.engine.selectors.strategies.ChoosingStrategy
-import org.utbot.engine.selectors.strategies.DistanceStatistics
-import org.utbot.engine.selectors.strategies.EdgeVisitCountingStatistics
-import org.utbot.engine.selectors.strategies.StepsLimitStoppingStrategy
-import org.utbot.engine.selectors.strategies.StoppingStrategy
+import org.utbot.engine.selectors.strategies.*
 import org.utbot.framework.UtSettings.seedInPathSelector
 
 /**
@@ -56,6 +52,15 @@ fun inheritorsSelector(
     typeRegistry: TypeRegistry,
     builder: InheritorsSelectorBuilder.() -> (Unit)
 ) = InheritorsSelectorBuilder(graph, typeRegistry).apply(builder).build()
+
+/**
+ * build [ScoringSelector] using [InheritorsSelectorBuilder]
+ */
+fun scoringSelector(
+    graph: InterProceduralUnitGraph,
+    scoringStrategy: ScoringStrategy,
+    builder: ScoringSelectorBuilder.() -> (Unit)
+) = ScoringSelectorBuilder(graph, scoringStrategy).apply(builder).build()
 
 /**
  * build [DepthSelector] using [DepthSelectorBuilder]
@@ -170,6 +175,22 @@ class CoveredNewSelectorBuilder internal constructor(
         withDistanceStrategy(),
         requireNotNull(context.stoppingStrategy) { "StoppingStrategy isn't specified" },
         seed
+    )
+}
+
+/**
+ * Builder for [ScoringSelector]. Used in [scoringSelector]
+ *
+ */
+class ScoringSelectorBuilder internal constructor(
+    graph: InterProceduralUnitGraph,
+    val scoringStrategy: ScoringStrategy,
+    context: PathSelectorContext = PathSelectorContext(graph)
+) : PathSelectorBuilder<ScoringSelector>(graph, context) {
+    override fun build() = ScoringSelector(
+        withDistanceStrategy(),
+        requireNotNull(context.stoppingStrategy) { "StoppingStrategy isn't specified" },
+        scoringStrategy
     )
 }
 

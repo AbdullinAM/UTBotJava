@@ -106,7 +106,8 @@ object UtSettings {
     /**
      * Type of path selector
      */
-    var pathSelectorType: PathSelectorType by getEnumProperty(PathSelectorType.INHERITORS_SELECTOR)
+    var pathSelectorType: PathSelectorType by getEnumProperty(PathSelectorType.SCORING_SELECTOR)
+//    var pathSelectorType: PathSelectorType by getEnumProperty(PathSelectorType.INHERITORS_SELECTOR)
 
     /**
      * Steps limit for path selector.
@@ -295,7 +296,8 @@ object UtSettings {
 
 enum class PathSelectorType {
     COVERED_NEW_SELECTOR,
-    INHERITORS_SELECTOR
+    INHERITORS_SELECTOR,
+    SCORING_SELECTOR
 }
 
 enum class TestSelectionStrategyType {
