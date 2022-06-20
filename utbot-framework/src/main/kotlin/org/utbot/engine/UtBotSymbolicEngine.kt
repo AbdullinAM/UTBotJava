@@ -255,12 +255,14 @@ private fun pathSelector(
     }
     PathSelectorType.SCORING_SELECTOR -> scoringSelector(
         graph, BasicScoringStrategy(
-            UtModelFactory().produceCompositeModel(
+            mapOf(
+            LocalVariable("r0") to UtModelFactory().produceCompositeModel(
                 ClassId("org.example.ComplexCounter"),
                 hashMapOf(
                     "private int org.example.ComplexCounter.a" to UtPrimitiveModel(7),
                     "private int org.example.ComplexCounter.b" to UtPrimitiveModel(1000),
                 )
+            )
             ),
             resolverBuilder
         )

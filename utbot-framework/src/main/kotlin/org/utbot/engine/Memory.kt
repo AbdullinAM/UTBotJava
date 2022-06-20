@@ -95,6 +95,8 @@ data class LocalVariableMemory(
 
     val localValues: Set<SymbolicValue>
         get() = locals.values.toSet()
+
+    val localsMap: Map<LocalVariable, SymbolicValue> get() = locals.toMap()
 }
 
 /**
