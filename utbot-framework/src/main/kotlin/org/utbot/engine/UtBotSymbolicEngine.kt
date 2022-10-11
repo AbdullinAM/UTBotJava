@@ -34,6 +34,21 @@ import org.utbot.framework.UtSettings.useDebugVisualization
 import org.utbot.framework.concrete.UtConcreteExecutionData
 import org.utbot.framework.concrete.UtConcreteExecutionResult
 import org.utbot.framework.concrete.UtExecutionInstrumentation
+import org.utbot.framework.plugin.api.ClassId
+import org.utbot.framework.plugin.api.ConcreteExecutionFailureException
+import org.utbot.framework.plugin.api.EnvironmentModels
+import org.utbot.framework.plugin.api.ExecutableId
+import org.utbot.framework.plugin.api.Instruction
+import org.utbot.framework.plugin.api.Step
+import org.utbot.framework.plugin.api.UtAssembleModel
+import org.utbot.framework.plugin.api.UtConcreteExecutionFailure
+import org.utbot.framework.plugin.api.UtError
+import org.utbot.framework.plugin.api.UtFailedExecution
+import org.utbot.framework.plugin.api.UtInstrumentation
+import org.utbot.framework.plugin.api.UtNullModel
+import org.utbot.framework.plugin.api.UtOverflowFailure
+import org.utbot.framework.plugin.api.UtResult
+import org.utbot.framework.plugin.api.UtSymbolicExecution
 import org.utbot.framework.util.graph
 import org.utbot.framework.plugin.api.util.isStatic
 import org.utbot.framework.plugin.api.util.description
@@ -188,7 +203,7 @@ class UtBotSymbolicEngine(
     private val methodUnderTest: SymbolicEngineTarget,
     classpath: String,
     dependencyPaths: String,
-    mockStrategy: MockStrategy = NO_MOCKS,
+    val mockStrategy: MockStrategy = NO_MOCKS,
     chosenClassesToMockAlways: Set<ClassId>,
     private val solverTimeoutInMillis: Int = checkSolverTimeoutMillis,
     private val useSynthesis: Boolean = enableSynthesis,
@@ -475,6 +490,7 @@ class UtBotSymbolicEngine(
             val names = graph.body.method.tags.filterIsInstance<ParamNamesTag>().firstOrNull()?.names
             parameterNameMap = { index -> names?.getOrNull(index) }
             fuzzerType = { try { toFuzzerType(executableId.executable.genericParameterTypes[it]) } catch (_: Throwable) { null } }
+            shouldMock = { mockStrategy.eligibleToMock(it, classUnderTest) }
         }
         val coveredInstructionTracker = Trie(Instruction::id)
         val coveredInstructionValues = linkedMapOf<Trie.Node<Instruction>, List<FuzzedValue>>()
