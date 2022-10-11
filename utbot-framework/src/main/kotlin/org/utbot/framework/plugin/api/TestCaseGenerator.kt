@@ -76,6 +76,7 @@ open class TestCaseGenerator(
 ) {
     private val logger: KLogger = KotlinLogging.logger {}
     private val timeoutLogger: KLogger = KotlinLogging.logger(logger.name + ".timeout")
+    protected var synthesizerController = SynthesizerController(UtSettings.synthesisTimeoutInMillis)
 
     private val classpathForEngine: String
         get() = (buildDirs + listOfNotNull(classpath)).joinToString(File.pathSeparator)
