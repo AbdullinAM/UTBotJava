@@ -175,9 +175,9 @@ fun runGeneration(
     val testSets: MutableList<UtMethodTestSet> = mutableListOf()
     val currentContext = utContext
 
-    val timeBudgetMs = timeLimitSec * 1000
+    val timeBudgetMs = (timeLimitSec * 1000) / 2
     val generationTimeout: Long = timeBudgetMs - timeBudgetMs * 15 / 100 // 4000 ms for terminate all activities and finalize code in file
-    val synthesisTimeout = timeBudgetMs / 2
+    val synthesisTimeout = timeBudgetMs
 
     logger.debug { "-----------------------------------------------------------------------------" }
     logger.info(
@@ -206,10 +206,6 @@ fun runGeneration(
     if (cut.classLoader.javaClass != URLClassLoader::class.java) {
         logger.error("Seems like classloader for cut not valid (maybe it was backported to system): ${cut.classLoader}")
     }
-
-    val synthesizerController = SynthesizerController(
-        synthesisTimeout, synthesisTimeout
-    )
 
     val statsForClass = StatsForClass()
 
@@ -332,7 +328,7 @@ fun runGeneration(
                                             statsForClass.testedClassNames.add(className)
 
                                             //TODO: it is a strange hack to create fake test case for one [UtResult]
-                                            testSets.add(UtMethodTestSet(method, testCaseGenerator.toAssemble(synthesizerController, method, result)))
+                                            testSets.add(UtMethodTestSet(method, listOf(result)))
                                         } catch (e: Throwable) {
                                             //Here we need isolation
                                             logger.error(e) { "Code generation failed" }
@@ -384,8 +380,18 @@ fun runGeneration(
         }
         cancellator.cancel()
 
+        val synthesizerController = SynthesizerController(
+            synthesisTimeout, synthesisTimeout
+        )
+        val synthesizedTestSets = testSets.map {
+            UtMethodTestSet(
+                it.method,
+                testCaseGenerator.toAssemble(synthesizerController, it.method, it.executions)
+            )
+        }
+
         logger.info().bracket("Flushing tests for [${cut.simpleName}] on disk") {
-            writeTestClass(cut, codeGenerator.generateAsString(testSets))
+            writeTestClass(cut, codeGenerator.generateAsString(synthesizedTestSets))
         }
         //write classes
     }

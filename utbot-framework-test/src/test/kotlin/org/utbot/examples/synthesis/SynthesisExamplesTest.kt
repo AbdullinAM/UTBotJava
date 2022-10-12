@@ -26,7 +26,6 @@ class SynthesisExamplesTest : UtValueTestCaseChecker(
 ) {
     private val initialEnableSynthesizer = UtSettings.enableSynthesis
     private val initialEnableSynthesisCache = UtSettings.enableSynthesisCache
-    private val initialTimeoutInMillis = UtSettings.synthesisTimeoutInMillis
     private val initialMaxDepth = UtSettings.synthesisMaxDepth
 
     companion object {
@@ -37,7 +36,6 @@ class SynthesisExamplesTest : UtValueTestCaseChecker(
     fun enableSynthesizer() {
         UtSettings.enableSynthesis = true
         UtSettings.enableSynthesisCache = true
-        UtSettings.synthesisTimeoutInMillis = 100_000
         UtSettings.synthesisMaxDepth = 10
     }
 
@@ -45,7 +43,6 @@ class SynthesisExamplesTest : UtValueTestCaseChecker(
     fun disableSynthesizer() {
         UtSettings.enableSynthesis = initialEnableSynthesizer
         UtSettings.enableSynthesisCache = initialEnableSynthesisCache
-        UtSettings.synthesisTimeoutInMillis = initialTimeoutInMillis
         UtSettings.synthesisMaxDepth = initialMaxDepth
     }
 

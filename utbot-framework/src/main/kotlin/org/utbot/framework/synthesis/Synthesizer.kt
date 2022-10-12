@@ -3,7 +3,6 @@ package org.utbot.framework.synthesis
 import mu.KotlinLogging
 import org.utbot.framework.UtSettings.enableSynthesisCache
 import org.utbot.framework.UtSettings.synthesisMaxDepth
-import org.utbot.framework.UtSettings.synthesisTimeoutInMillis
 import org.utbot.framework.modifications.StatementsStorage
 import org.utbot.framework.plugin.api.*
 import org.utbot.framework.plugin.api.util.isArray
@@ -114,7 +113,7 @@ class Synthesizer(
     }
 
     fun synthesize(
-        timeLimit: Long = synthesisTimeoutInMillis,
+        timeLimit: Long,
         enableCache: Boolean = enableSynthesisCache
     ): List<UtModel?> {
         val modelSubsets = splitModels()

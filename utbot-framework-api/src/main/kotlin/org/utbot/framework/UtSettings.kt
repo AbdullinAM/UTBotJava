@@ -391,12 +391,6 @@ object UtSettings : AbstractSettings(
     var enableSynthesisCache by getBooleanProperty(true)
 
     /**
-     * Timeout model synthesis
-     *
-     */
-    var synthesisTimeoutInMillis by getLongProperty(60000L)
-
-    /**
      * Max depth for synthesis search
      *
      */
