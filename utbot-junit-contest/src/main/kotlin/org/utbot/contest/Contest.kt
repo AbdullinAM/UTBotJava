@@ -61,6 +61,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 import org.utbot.engine.SymbolicEngineTarget
+import org.utbot.framework.synthesis.SynthesizerController
 
 internal const val junitVersion = 4
 private val logger = KotlinLogging.logger {}
@@ -176,6 +177,7 @@ fun runGeneration(
 
     val timeBudgetMs = timeLimitSec * 1000
     val generationTimeout: Long = timeBudgetMs - timeBudgetMs * 15 / 100 // 4000 ms for terminate all activities and finalize code in file
+    val synthesisTimeout = timeBudgetMs / 2
 
     logger.debug { "-----------------------------------------------------------------------------" }
     logger.info(
@@ -204,6 +206,10 @@ fun runGeneration(
     if (cut.classLoader.javaClass != URLClassLoader::class.java) {
         logger.error("Seems like classloader for cut not valid (maybe it was backported to system): ${cut.classLoader}")
     }
+
+    val synthesizerController = SynthesizerController(
+        synthesisTimeout, synthesisTimeout
+    )
 
     val statsForClass = StatsForClass()
 
@@ -326,7 +332,7 @@ fun runGeneration(
                                             statsForClass.testedClassNames.add(className)
 
                                             //TODO: it is a strange hack to create fake test case for one [UtResult]
-                                            testSets.add(UtMethodTestSet(method, listOf(result)))
+                                            testSets.add(UtMethodTestSet(method, testCaseGenerator.toAssemble(synthesizerController, method, result)))
                                         } catch (e: Throwable) {
                                             //Here we need isolation
                                             logger.error(e) { "Code generation failed" }

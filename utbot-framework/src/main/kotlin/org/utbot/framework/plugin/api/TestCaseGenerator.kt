@@ -396,6 +396,9 @@ open class TestCaseGenerator(
         return minimizedExecutions
     }
 
+    fun toAssemble(controller: SynthesizerController, method: ExecutableId, execution: UtExecution) =
+        listOf(execution).toAssemble(controller, method)
+
     protected fun List<UtExecution>.toAssemble(
         controller: SynthesizerController,
         method: ExecutableId
