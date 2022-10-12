@@ -94,8 +94,11 @@ class TestSpecificTestCaseGenerator(
         forceMockListener?.detach(this, forceMockListener)
         forceStaticMockListener?.detach(this, forceStaticMockListener)
 
-        synthesizerController = SynthesizerController(UtSettings.synthesisTimeoutInMillis)
-        val minimizedExecutions = super.minimizeExecutions(executions.toAssemble(method))
+        val synthesizerController = SynthesizerController(
+            defaultTimeEstimator.globalSynthesisTimeout,
+            defaultTimeEstimator.localSynthesisTimeout
+        )
+        val minimizedExecutions = super.minimizeExecutions(executions.toAssemble(synthesizerController, method))
         return UtMethodTestSet(method, minimizedExecutions, jimpleBody(method), errors)
     }
 }

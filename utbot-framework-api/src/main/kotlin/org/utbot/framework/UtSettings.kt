@@ -383,7 +383,7 @@ object UtSettings : AbstractSettings(
     /**
      * Flag for enabling model synthesis
      */
-    var enableSynthesis by getBooleanProperty(false)
+    var enableSynthesis by getBooleanProperty(true)
 
     /**
      * Flag for enabling model synthesis

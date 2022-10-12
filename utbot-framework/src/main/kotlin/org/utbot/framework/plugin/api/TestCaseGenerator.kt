@@ -76,7 +76,6 @@ open class TestCaseGenerator(
 ) {
     private val logger: KLogger = KotlinLogging.logger {}
     private val timeoutLogger: KLogger = KotlinLogging.logger(logger.name + ".timeout")
-    protected var synthesizerController = SynthesizerController(UtSettings.synthesisTimeoutInMillis)
 
     private val classpathForEngine: String
         get() = buildDir.toString() + (classpath?.let { File.pathSeparator + it } ?: "")
@@ -235,10 +234,14 @@ open class TestCaseGenerator(
         ConcreteExecutor.defaultPool.close() // TODO: think on appropriate way to close child processes
 
 
+        val synthesizerController = SynthesizerController(
+            executionTimeEstimator.globalSynthesisTimeout,
+            executionTimeEstimator.localSynthesisTimeout
+        )
         return methods.map { method ->
             UtMethodTestSet(
                 method,
-                minimizeExecutions(method2executions.getValue(method).toAssemble(method)),
+                minimizeExecutions(method2executions.getValue(method).toAssemble(synthesizerController, method)),
                 jimpleBody(method),
                 method2errors.getValue(method)
             )
@@ -298,15 +301,20 @@ open class TestCaseGenerator(
     // CONFLUENCE:The+UtBot+Java+timeouts
 
     class ExecutionTimeEstimator(val userTimeout: Long, methodsUnderTestNumber: Int) {
+        val halfTheTimeout = userTimeout / 2
+
         // Cut the timeout from the user in two halves
-        private val halfTimeUserExpectsToWaitInMillis = userTimeout / 2
+        private val halfTimeUserExpectsToWaitInMillis = halfTheTimeout / 2
 
         // If the half is too much for concrete execution, decrease the concrete timeout
         var concreteExecutionBudgetInMillis =
             min(halfTimeUserExpectsToWaitInMillis, 300L * methodsUnderTestNumber)
 
         // The symbolic execution time is the reminder but not longer than checkSolverTimeoutMillis times methods number
-        val symbolicExecutionTimeout = userTimeout - concreteExecutionBudgetInMillis
+        val symbolicExecutionTimeout = halfTheTimeout - concreteExecutionBudgetInMillis
+
+        val globalSynthesisTimeout = halfTheTimeout
+        val localSynthesisTimeout = globalSynthesisTimeout / (methodsUnderTestNumber / 2 + 1)
 
         //Allow traverse at least one method for the symbolic execution timeout
         val timeslotForOneToplevelMethodTraversalInMillis =
@@ -388,18 +396,22 @@ open class TestCaseGenerator(
         return minimizedExecutions
     }
 
-    protected fun List<UtExecution>.toAssemble(method: ExecutableId): List<UtExecution> =
+    protected fun List<UtExecution>.toAssemble(
+        controller: SynthesizerController,
+        method: ExecutableId
+    ): List<UtExecution> =
         map { execution ->
             var result = execution
-            synthesizerController.spentTime += measureTimeMillis {
-                if (!synthesizerController.hasTimeLimit()) return@measureTimeMillis
+            controller.spentTime += measureTimeMillis {
+                if (!controller.hasTimeLimit()) return@measureTimeMillis
 
                 val symbolicExecution = (execution as? UtSymbolicExecution)
                     ?: return@measureTimeMillis
 
-                val newBeforeState = mapEnvironmentModels(method, symbolicExecution, symbolicExecution.stateBefore) {
-                    it.modelsBefore
-                } ?: return@measureTimeMillis
+                val newBeforeState =
+                    mapEnvironmentModels(controller, method, symbolicExecution, symbolicExecution.stateBefore) {
+                        it.modelsBefore
+                    } ?: return@measureTimeMillis
                 val newAfterState = getConcreteAfterState(method, newBeforeState) ?: return@measureTimeMillis
 
                 result = symbolicExecution.copy(
@@ -413,6 +425,7 @@ open class TestCaseGenerator(
         }
 
     private fun mapEnvironmentModels(
+        controller: SynthesizerController,
         method: ExecutableId,
         symbolicExecution: UtSymbolicExecution,
         models: EnvironmentModels,
@@ -420,7 +433,7 @@ open class TestCaseGenerator(
     ): EnvironmentModels? {
         val constrainedExecution = symbolicExecution.constrainedExecution ?: return null
         val aa = Synthesizer(this@TestCaseGenerator, method, selector(constrainedExecution))
-        val synthesizedModels = aa.synthesize(synthesizerController.localTimeLimit)
+        val synthesizedModels = aa.synthesize(controller.localTimeLimit)
 
         val (synthesizedThis, synthesizedParameters) = models.thisInstance?.let {
             synthesizedModels.first() to synthesizedModels.drop(1)
