@@ -497,6 +497,10 @@ class UtBotSymbolicEngine(
         var attempts = 0
         val attemptsLimit = UtSettings.fuzzingMaxAttempts
         val hasMethodUnderTestParametersToFuzz = executableId.parameters.isNotEmpty()
+        if (!hasMethodUnderTestParametersToFuzz && executableId.isStatic) {
+            // Currently, fuzzer doesn't work with static methods with empty parameters
+            return@flow
+        }
         val fuzzedValues = if (hasMethodUnderTestParametersToFuzz) {
             fuzz(methodUnderTestDescription, modelProvider(defaultModelProviders(defaultIdGenerator)))
         } else {
