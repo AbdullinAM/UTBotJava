@@ -384,6 +384,7 @@ fun runGeneration(
             synthesisTimeout, synthesisTimeout
         )
         val synthesizedTestSets = testSets.map {
+            logger.info { "Running synthesizer for ${it.method} test case" }
             UtMethodTestSet(
                 it.method,
                 testCaseGenerator.toAssemble(synthesizerController, it.method, it.executions)
