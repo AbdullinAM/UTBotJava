@@ -17,8 +17,8 @@ import org.utbot.tests.infrastructure.isException
 class SynthesisExamplesTest : UtValueTestCaseChecker(
     testClass = SynthesisExamples::class,
     testCodeGeneration = true,
-    languagePipelines = listOf(
-        CodeGenerationLanguageLastStage(CodegenLanguage.JAVA),
+    pipelines = listOf(
+        TestLastStage(CodegenLanguage.JAVA),
         // kotlin is turned off, because UtBot Kotlin code generation
         // currently does not support collections
         //  CodeGenerationLanguageLastStage(CodegenLanguage.KOTLIN)
